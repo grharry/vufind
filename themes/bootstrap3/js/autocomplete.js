@@ -47,7 +47,7 @@
         if (options.highlight) {
           // escape term for regex
           // https://github.com/sindresorhus/escape-string-regexp/blob/master/index.js
-          var escapedTerm = input.val().replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
+          var escapedTerm = input.val().replace(/[|\\{}()\[\]\^$+*?.]/g, '\\$&');
           var regex = new RegExp('('+escapedTerm+')', 'ig');
           content = content.replace(regex, '<b>$1</b>');
         }
@@ -57,12 +57,7 @@
         item.attr('data-index', i+0)
             .attr('data-value', data[i].val)
             .addClass('item')
-            .html(content)
-            .mouseover(function() {
-              $.fn.autocomplete.element.find('.item.selected').removeClass('selected');
-              $(this).addClass('selected');
-              input.data('selected', $(this).data('index'));
-            });
+            .html(content);
         if (typeof data[i].description !== 'undefined') {
           item.append($('<small/>').text(data[i].description));
         }
@@ -71,6 +66,10 @@
       $.fn.autocomplete.element.html(shell);
       $.fn.autocomplete.element.find('.item').mousedown(function() {
         populate($(this).attr('data-value'), input, {mouse: true});
+        setTimeout(function() {
+          input.focus();
+          hide();
+        }, 10);
       });
       align(input, $.fn.autocomplete.element);
     }
@@ -141,7 +140,7 @@
       input.keyup(function(event) {
         // Ignore navigation keys
         // - Ignore control functions
-        if (event.ctrlKey) {
+        if (event.ctrlKey || event.which === 17) {
           return;
         }
         // - Function keys (F1 - F15)
@@ -172,6 +171,10 @@
         }
       });
       input.keydown(function(event) {
+        // - Ignore control functions
+        if (event.ctrlKey || event.which === 17) {
+          return;
+        }
         var element = $.fn.autocomplete.element;
         var position = $(this).data('selected');
         switch (event.which) {
@@ -246,7 +249,7 @@
         } else if (settings === "hide") {
           hide();
         } else if (settings === "clear cache" && options.cache) {
-          var cid = parseInt(input.data('cache-id'));
+          var cid = parseInt(input.data('cache-id'), 10);
           $.fn.autocomplete.cache[cid] = {};
         }
         return input;
@@ -277,13 +280,13 @@
       minLength: 3
     };
     $.fn.autocomplete.ajax = function(ops) {
-      if (timer) clearTimeout(timer);
+      if (timer) { clearTimeout(timer); }
       if (xhr) { xhr.abort(); }
       timer = setTimeout(
         function() { xhr = $.ajax(ops); },
         $.fn.autocomplete.options.ajaxDelay
       );
-    }
+    };
   }
 
 }( jQuery ));
